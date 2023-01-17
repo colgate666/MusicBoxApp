@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "backend"
+		},
+		{
+			"path": "app/music_box"
+		},
+		{
+			"name": "MusicBoxApp",
+			"path": "."
+		}
+	],
+	"settings": {}
+}
