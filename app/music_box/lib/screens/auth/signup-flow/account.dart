@@ -19,6 +19,8 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
   String _usernameInput = "";
   String _passwordInput = "";
   String? _userImage;
+  bool _loading = false;
+  bool _done = false;
 
   onRegister() async {
     String? message;
@@ -37,6 +39,8 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
       return;
     }
 
+    _loading = true;
+
     GraphQLClient client = GraphQLProvider.of(context).value;
     final result = await client
         .mutate(MutationOptions(document: addUserMutation, variables: {
@@ -46,6 +50,21 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
           password: _passwordInput,
           avatar: _userImage)
     }));
+
+    if (result.hasException) {
+      final errMsg = result.exception?.graphqlErrors[0].message;
+
+      if (errMsg != null) {
+        final snack = SnackBar(content: Text(errMsg));
+        ScaffoldMessenger.of(context).showSnackBar(snack);
+      }
+    } else {
+      _done = true;
+      const snack = SnackBar(content: Text("Account created."));
+      ScaffoldMessenger.of(context).showSnackBar(snack);
+    }
+
+    _loading = false;
   }
 
   onAvatarPressed() async {
@@ -90,6 +109,7 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
           Padding(
             padding: const EdgeInsets.only(left: 8, right: 8),
             child: TextField(
+              enabled: !_loading && !_done,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text("Username")),
               textInputAction: TextInputAction.next,
@@ -102,6 +122,7 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
           Padding(
             padding: const EdgeInsets.only(left: 8, right: 8),
             child: TextField(
+              enabled: !_loading && !_done,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), label: Text("Password")),
               keyboardType: TextInputType.visiblePassword,
@@ -113,7 +134,9 @@ class _SignUpAccountDataScreenState extends State<SignUpAccountDataScreen> {
           const SizedBox(
             height: 12,
           ),
-          ElevatedButton(onPressed: onRegister, child: const Text("Register"))
+          ElevatedButton(
+              onPressed: !_loading && !_done ? onRegister : null,
+              child: const Text("Register"))
         ],
       ),
     );
